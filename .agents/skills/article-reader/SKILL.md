@@ -9,7 +9,7 @@ Use only the `article-reader` MCP server tools named `inspect_article` and `read
 
 ## Workflow
 
-1. Choose one source. Prefer `http`. Use `browser` only when the user asks to use an already-authorized browser session and the local browser source is configured. Do not switch sources repeatedly to work around a restriction.
+1. Choose one source. Prefer `http`. Use `browser` only when the user asks to use an already-authorized local browser session, has already opened the exact target URL, and the browser source is configured. The browser source never navigates. Do not switch sources repeatedly to work around a restriction.
 2. Call `inspect_article` with `{ "url": "<user URL>", "source": "http" }` or the justified `browser` source.
 3. Read `accessState`, `isComplete`, `indicators`, metadata, and provenance before making any claim about the article.
 4. Only when inspection returns `accessState: "accessible"` and `isComplete: true`, call `read_article` with the same `url` and `source`.

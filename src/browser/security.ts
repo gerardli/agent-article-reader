@@ -3,10 +3,7 @@ import { isIP } from "node:net";
 import ipaddr from "ipaddr.js";
 
 import type {
-  BrowserSnapshot,
   HostAddressResolver,
-  NavigationPhase,
-  NavigationSafetyHook,
 } from "./types.js";
 
 const ALLOWED_CDP_PROTOCOLS = new Set(["http:", "https:", "ws:", "wss:"]);
@@ -19,10 +16,7 @@ export class BrowserSafetyError extends Error {
   }
 }
 
-export function assertSafeCdpEndpoint(
-  endpoint: string,
-  allowNonLoopbackEndpoint = false,
-): URL {
+export function assertSafeCdpEndpoint(endpoint: string): URL {
   let parsed: URL;
   try {
     parsed = new URL(endpoint);
@@ -40,10 +34,8 @@ export function assertSafeCdpEndpoint(
     throw new BrowserSafetyError("CDP endpoint must include an explicit port");
   }
 
-  if (!allowNonLoopbackEndpoint && !isLiteralLoopbackHost(parsed.hostname)) {
-    throw new BrowserSafetyError(
-      "CDP endpoint is not literal localhost/loopback; set allowNonLoopbackEndpoint explicitly",
-    );
+  if (!isLiteralLoopbackHost(parsed.hostname)) {
+    throw new BrowserSafetyError("CDP endpoint must use a literal localhost/loopback host");
   }
   return parsed;
 }
@@ -89,27 +81,6 @@ export async function assertPublicHttpUrl(
     }
   }
   return parsed;
-}
-
-export function createNavigationGuard(options: {
-  resolveHostname?: HostAddressResolver;
-  hook?: NavigationSafetyHook;
-  browserSession: BrowserSnapshot["provenance"]["browserSession"];
-}): (url: string, phase: NavigationPhase) => Promise<URL> {
-  const resolver = options.resolveHostname ?? resolvePublicAddresses;
-  const resolutions = new Map<string, Promise<readonly string[]>>();
-  const resolveOnce: HostAddressResolver = (hostname) => {
-    const cached = resolutions.get(hostname);
-    if (cached) return cached;
-    const pending = resolver(hostname);
-    resolutions.set(hostname, pending);
-    return pending;
-  };
-  return async (url, phase) => {
-    const parsed = await assertPublicHttpUrl(url, resolveOnce);
-    await options.hook?.(parsed, { phase, browserSession: options.browserSession });
-    return parsed;
-  };
 }
 
 function isLiteralLoopbackHost(hostname: string): boolean {

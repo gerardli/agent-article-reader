@@ -24,19 +24,12 @@ The process waits for MCP JSON-RPC on stdin; running it directly is only a start
 
 ## Optional browser source
 
-Leave both variables unset for HTTP-only operation. To use a browser the user already controls, set a literal loopback CDP endpoint with an explicit port before starting the server:
+Leave the variable unset for HTTP-only operation. To use a browser the user already controls, set a literal loopback CDP endpoint with an explicit port before starting the server:
 
 ```bash
 ARTICLE_READER_CDP_ENDPOINT=http://127.0.0.1:9222 npm start
 ```
 
-The user must start and authorize that local browser session. The endpoint must not contain credentials, and the production entrypoint rejects non-loopback CDP hosts.
+The user must start and authorize that local browser session, then open the requested article URL before calling the tool. The browser adapter only captures an already-open page whose origin, path, and query exactly match the request; fragment differences are ignored. It never opens a tab or navigates a page.
 
-Alternatively, after a human has approved and installed the Playwright Chromium binary, use a clean, ephemeral headless browser:
-
-```bash
-npx playwright install chromium
-ARTICLE_READER_BROWSER_LAUNCH=1 npm start
-```
-
-If both variables are set, CDP takes precedence. Browser MCP requests still require a URL, enforce public-network and size limits, and return no article body when access is restricted or uncertain. Do not copy profiles, export cookies, put credentials in configuration, or commit local browser data. Browser installation, login, permissions, and real-site acceptance testing remain explicit human gates.
+The endpoint must not contain credentials, and all non-loopback CDP hosts are rejected. Browser MCP requests enforce public-network and size limits and return no article body when access is restricted or uncertain. Do not copy profiles, export cookies, put credentials in configuration, or commit local browser data. Browser authorization and real-site acceptance testing remain explicit human gates.

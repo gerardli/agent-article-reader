@@ -12,13 +12,8 @@ describe("browser endpoint safety", () => {
     expect(assertSafeCdpEndpoint("ws://[::1]:9222/devtools/browser/id").port).toBe("9222");
   });
 
-  it("requires explicit opt-in for non-loopback CDP endpoints", () => {
-    expect(() => assertSafeCdpEndpoint("https://browser.example:9222")).toThrow(
-      /allowNonLoopbackEndpoint/,
-    );
-    expect(
-      assertSafeCdpEndpoint("https://browser.example:9222", true).hostname,
-    ).toBe("browser.example");
+  it("rejects non-loopback CDP endpoints without an override", () => {
+    expect(() => assertSafeCdpEndpoint("https://browser.example:9222")).toThrow(/loopback/);
   });
 
   it("rejects credentials and missing explicit ports", () => {
@@ -29,7 +24,7 @@ describe("browser endpoint safety", () => {
   });
 });
 
-describe("navigation target safety", () => {
+describe("browser page target safety", () => {
   it("accepts only HTTP(S) targets resolving entirely to public addresses", async () => {
     const result = await assertPublicHttpUrl(
       "https://example.com/article",

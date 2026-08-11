@@ -6,6 +6,7 @@ describe("visible access-state hints", () => {
   it.each([
     ["Verify that you are human before continuing", "captcha"],
     ["Sign in to continue reading", "login_required"],
+    ["Register to keep reading", "login_required"],
     ["Subscribe to unlock this article", "subscription_required"],
     ["You have reached your free article limit", "metered"],
     ["The rest of this article is available to members", "truncated"],

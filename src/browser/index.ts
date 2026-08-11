@@ -4,7 +4,6 @@ export {
   assertPublicHttpUrl,
   assertSafeCdpEndpoint,
   BrowserSafetyError,
-  createNavigationGuard,
   resolvePublicAddresses,
 } from "./security.js";
 export type {
@@ -16,7 +15,4 @@ export type {
   BrowserMode,
   BrowserSnapshot,
   HostAddressResolver,
-  NavigationPhase,
-  NavigationPolicyContext,
-  NavigationSafetyHook,
 } from "./types.js";

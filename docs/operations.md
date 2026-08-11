@@ -16,7 +16,7 @@ This repository produces a local process, not a hosted service. Operational read
 - MCP tool schemas or structured result fields change.
 - A redirect, DNS, timeout, or byte-limit test regresses.
 - A browser adapter starts requiring profile, cookie, or credential transfer.
-- A runtime starts accepting non-loopback CDP endpoints or both browser modes behave ambiguously.
+- A runtime starts accepting non-loopback CDP endpoints, opening tabs, or navigating browser pages.
 
 Any access-status upgrade or network-safety regression blocks release. A website-specific extraction failure should degrade to partial/unsupported with a reason; it must not trigger bypass tactics.
 

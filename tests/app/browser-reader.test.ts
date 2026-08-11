@@ -31,7 +31,7 @@ function snapshot(overrides: Partial<BrowserSnapshot> = {}): BrowserSnapshot {
       requestedUrl: "https://example.com/story",
       finalUrl: "https://example.com/story",
       browserSession: "user-controlled-cdp",
-      navigationPerformed: true,
+      navigationPerformed: false,
     },
     ...overrides,
   };

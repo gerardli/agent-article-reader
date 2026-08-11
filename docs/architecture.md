@@ -10,7 +10,7 @@ The project is a local, stdio MCP server plus a repository skill. It reads only 
 - **MCP tools:** `inspect_article` classifies access and `read_article` returns normalized content only when complete access is established. Both accept `source: "http" | "browser"`; HTTP is the default.
 - **Policy gate:** accepts HTTP(S) only, rejects local/private/link-local destinations, validates before each request and redirect, and limits response size.
 - **HTTP adapter:** fetches public or already-accessible pages without credentials.
-- **Browser adapter:** captures bounded visible DOM through either a clean headless browser or a local, user-controlled CDP session. The entrypoint enables exactly one browser mode through `ARTICLE_READER_CDP_ENDPOINT` or `ARTICLE_READER_BROWSER_LAUNCH=1`. It never reads cookies or profiles directly and does not persist browser state.
+- **Browser adapter:** captures bounded visible DOM from an exact already-open page in a local, user-controlled CDP session enabled through `ARTICLE_READER_CDP_ENDPOINT`. It does not open tabs, navigate, read cookies or profiles directly, or persist browser state.
 - **Extractor:** separates main article content and normalizes metadata.
 - **Result contract:** includes access status, completeness, reasons, metadata, provenance, and extraction source. Content is null unless the final classification is `accessible` and complete; a read never upgrades restricted or uncertain access.
 

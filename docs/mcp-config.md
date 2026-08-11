@@ -15,16 +15,10 @@ enabled = true
 
 Restart Codex and confirm that `inspect_article` and `read_article` are listed for the `article_reader` server.
 
-For an already-authorized browser exposed on a local CDP port, add this line under the same server block:
+For an already-authorized browser exposed on a local CDP port, open the exact target URL in that browser and add this line under the same server block:
 
 ```toml
 env = { ARTICLE_READER_CDP_ENDPOINT = "http://127.0.0.1:9222" }
-```
-
-For an approved, locally installed Playwright Chromium instead, use:
-
-```toml
-env = { ARTICLE_READER_BROWSER_LAUNCH = "1" }
 ```
 
 ## JSON-based MCP clients
@@ -43,4 +37,4 @@ env = { ARTICLE_READER_BROWSER_LAUNCH = "1" }
 }
 ```
 
-Omit `env` for HTTP-only use. Set only one browser variable; CDP wins if both exist. No token, cookie, browser profile, remote CDP address, or website credential belongs in this configuration. Client-specific installation and permission prompts require human approval and are not automated by this repository.
+Omit `env` for HTTP-only use. Browser requests only capture an already-open page whose origin, path, and query exactly match the requested URL; they never navigate. No token, cookie, browser profile, remote CDP address, or website credential belongs in this configuration. Client-specific installation and permission prompts require human approval and are not automated by this repository.

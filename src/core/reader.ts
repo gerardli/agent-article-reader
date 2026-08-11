@@ -38,7 +38,8 @@ async function executeRead(url: string, options: ArticleReaderOptions): Promise<
       html: page.html,
       extractedText: extracted.text,
     });
-    const canReturnContent = classification.accessState === "accessible";
+    const canReturnContent =
+      classification.accessState === "accessible" && classification.isComplete;
     return {
       ...classification,
       metadata: extracted.metadata,

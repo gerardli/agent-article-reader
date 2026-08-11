@@ -13,11 +13,6 @@ function configuredBrowserReader() {
       new PlaywrightBrowserAdapter({ mode: { kind: "cdp", endpoint } }),
     );
   }
-  if (process.env.ARTICLE_READER_BROWSER_LAUNCH === "1") {
-    return createBrowserArticleReader(
-      new PlaywrightBrowserAdapter({ mode: { kind: "launch", headless: true } }),
-    );
-  }
   return undefined;
 }
 

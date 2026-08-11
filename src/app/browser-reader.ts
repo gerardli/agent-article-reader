@@ -9,7 +9,7 @@ import {
 import type { BrowserSnapshot } from "../browser/types.js";
 
 export interface BrowserSnapshotProvider {
-  capture(request: { url: string; waitUntil?: "domcontentloaded" | "load" }): Promise<BrowserSnapshot>;
+  capture(request: { url: string }): Promise<BrowserSnapshot>;
 }
 
 export interface BrowserArticleReader {
@@ -46,7 +46,7 @@ export function createBrowserArticleReader(
 ): BrowserArticleReader {
   async function execute(url: string): Promise<ArticleReadResult> {
     try {
-      const snapshot = await provider.capture({ url, waitUntil: "domcontentloaded" });
+      const snapshot = await provider.capture({ url });
       const extracted = extractArticle(snapshot.visibleHtml, snapshot.url);
       const forcedState = restrictedState(snapshot);
       const classification = forcedState
@@ -63,7 +63,8 @@ export function createBrowserArticleReader(
             html: snapshot.visibleHtml,
             extractedText: extracted.text,
           });
-      const canReturnContent = classification.accessState === "accessible";
+      const canReturnContent =
+        classification.accessState === "accessible" && classification.isComplete;
 
       return {
         ...classification,

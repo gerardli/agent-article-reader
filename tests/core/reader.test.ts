@@ -56,6 +56,27 @@ describe("article reader", () => {
     expect(result.provenance.warnings).toHaveLength(1);
   });
 
+  it.each([
+    ["Verify that you are human", "error"],
+    ["reached your free article limit", "paywall_detected"],
+    ["Register to keep reading", "login_required"],
+  ])("withholds content for reviewer restriction signal: %s", async (signal, accessState) => {
+    const fetchImpl = vi.fn<typeof fetch>(async () =>
+      new Response(html(`${body}<aside>${signal}</aside>`), {
+        headers: { "content-type": "text/html" },
+      }),
+    );
+
+    const result = await readArticle("https://example.com/story", { fetchImpl, dnsResolver });
+
+    expect(result).toMatchObject({
+      accessState,
+      isComplete: false,
+      content: null,
+      wordCount: 0,
+    });
+  });
+
   it("returns structured safety failures without making a network call", async () => {
     const fetchImpl = vi.fn<typeof fetch>();
     const result = await readArticle("http://127.0.0.1/private", { fetchImpl, dnsResolver });

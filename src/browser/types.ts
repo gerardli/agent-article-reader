@@ -36,56 +36,29 @@ export interface BrowserSnapshot {
   };
   provenance: {
     capturedAt: string;
-    requestedUrl?: string;
+    requestedUrl: string;
     finalUrl: string;
-    browserSession: "user-controlled-cdp" | "clean-ephemeral";
+    browserSession: "user-controlled-cdp";
     navigationPerformed: boolean;
   };
 }
 
-export type NavigationPhase = "initial" | "redirect" | "subresource" | "final";
-
-export interface NavigationPolicyContext {
-  phase: NavigationPhase;
-  browserSession: BrowserSnapshot["provenance"]["browserSession"];
+export interface BrowserMode {
+  kind: "cdp";
+  endpoint: string;
 }
-
-/** Additional caller policy. The built-in public-network policy always runs first. */
-export type NavigationSafetyHook = (
-  url: URL,
-  context: NavigationPolicyContext,
-) => void | Promise<void>;
-
-export type BrowserMode =
-  | {
-      kind: "cdp";
-      endpoint: string;
-      /** Required for any CDP host other than literal localhost/loopback. */
-      allowNonLoopbackEndpoint?: boolean;
-    }
-  | {
-      kind: "launch";
-      headless?: boolean;
-    };
 
 export interface BrowserAdapterOptions {
   mode: BrowserMode;
-  navigationSafetyHook?: NavigationSafetyHook;
-  navigationTimeoutMs?: number;
   operationTimeoutMs?: number;
   maxResponseBytes?: number;
   maxDomBytes?: number;
   maxTextCharacters?: number;
-  maxRedirects?: number;
 }
 
 export interface BrowserCaptureRequest {
-  /**
-   * Required for an ephemeral browser. When omitted for CDP, the most recent
-   * already-open HTTP(S) page is captured without navigating it.
-   */
-  url?: string;
-  waitUntil?: "domcontentloaded" | "load";
+  /** Exact already-open page URL to capture. Fragment differences are ignored. */
+  url: string;
 }
 
 export type HostAddressResolver = (hostname: string) => Promise<readonly string[]>;
