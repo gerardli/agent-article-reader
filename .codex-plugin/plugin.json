@@ -1,0 +1,6 @@
+{
+  "name": "agent-article-reader",
+  "version": "0.1.0",
+  "description": "Read and normalize public or already-authorized articles without bypassing access controls.",
+  "skills": "./.agents/skills/"
+}
