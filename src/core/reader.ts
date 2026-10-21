@@ -38,8 +38,15 @@ async function executeRead(url: string, options: ArticleReaderOptions): Promise<
       html: page.html,
       extractedText: extracted.text,
     });
-    const canReturnContent =
-      classification.accessState === "accessible" && classification.isComplete;
+    
+    /**
+     * Content return policy:
+     * - Return content when accessState is "accessible" (no restrictions detected)
+     * - isComplete indicates whether completeness was proven, not whether content should be returned
+     * - Restricted states (login_required, paywall_detected, truncated, error) withhold content
+     */
+    const canReturnContent = classification.accessState === "accessible";
+    
     return {
       ...classification,
       metadata: extracted.metadata,
@@ -53,7 +60,7 @@ async function executeRead(url: string, options: ArticleReaderOptions): Promise<
         redirectChain: page.redirectChain,
         extractor: "mozilla-readability",
         bytesReceived: page.bytesReceived,
-        warnings: canReturnContent ? [] : ["Content withheld because complete access was not established."],
+        warnings: canReturnContent ? [] : ["Content withheld because access restrictions were detected."],
       },
       content: canReturnContent ? extracted.text : null,
       wordCount: canReturnContent ? extracted.wordCount : 0,

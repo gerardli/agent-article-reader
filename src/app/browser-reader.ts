@@ -49,6 +49,14 @@ export function createBrowserArticleReader(
       const snapshot = await provider.capture({ url });
       const extracted = extractArticle(snapshot.visibleHtml, snapshot.url);
       const forcedState = restrictedState(snapshot);
+      
+      /**
+       * Browser completeness resolution:
+       * - If browser detected restrictions, use that state directly
+       * - If browser returned "unknown" completeness, we cannot upgrade it to "complete"
+       *   merely by running the HTTP classifier again on the same content
+       * - The HTTP classifier now returns isComplete:false for all cases
+       */
       const classification = forcedState
         ? {
             accessState: forcedState,
@@ -63,8 +71,14 @@ export function createBrowserArticleReader(
             html: snapshot.visibleHtml,
             extractedText: extracted.text,
           });
-      const canReturnContent =
-        classification.accessState === "accessible" && classification.isComplete;
+      
+      /**
+       * Content return policy:
+       * - Return content when accessState is "accessible" (no restrictions detected)
+       * - isComplete indicates whether completeness was proven, not whether content should be returned
+       * - Restricted states (login_required, paywall_detected, truncated, error) withhold content
+       */
+      const canReturnContent = classification.accessState === "accessible";
 
       return {
         ...classification,
@@ -86,7 +100,7 @@ export function createBrowserArticleReader(
             `Captured from visible DOM in a ${snapshot.provenance.browserSession} browser session.`,
             ...(canReturnContent
               ? []
-              : ["Content withheld because complete access was not established."]),
+              : ["Content withheld because access restrictions were detected."]),
           ],
         },
         content: canReturnContent ? extracted.text : null,

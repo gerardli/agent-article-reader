@@ -23,7 +23,7 @@ describe("article reader", () => {
       now: () => new Date("2025-02-03T04:05:06Z"),
     });
     expect(result.accessState).toBe("accessible");
-    expect(result.isComplete).toBe(true);
+    expect(result.isComplete).toBe(false);
     expect(result.content).toContain("Paragraph 0");
     expect(result.wordCount).toBeGreaterThan(50);
     expect(result.metadata).toMatchObject({

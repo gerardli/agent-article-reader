@@ -5,69 +5,77 @@
 - [x] 确认目标为 gerardli/agent-article-reader 私有 TypeScript MCP 项目。
 - [x] 核对入口、核心代码、测试策略及历史 CI。
 - [x] 汇总现有进度与已知问题到本文件，先同步再改进。
-- [ ] 核对本机项目位置、工作区修改及与远程的差异。
-- [ ] 修正下列完整性判断与误判问题，补必要回归测试。
-- [ ] 执行当前版本的离线检查与少量真实网页验收。
+- [x] 明确本机工作区的来源与边界（2026-10-21 第二轮）。
+- [x] 修正 P1/P2/P3/P4：完整性断言、浏览器 unknown 升级、限制词误判、短文章分类。
+- [x] 补必要回归测试并通过 `npm run check`。
+- [x] 用少量公开页面完成 HTTP 真实验收，并记录失败/环境限制。
 - [ ] 审查拟公开源码、Git 历史和第三方归属，确定自有代码许可证。
 - [ ] 按实际可用性整理 README 和公开候选版本。
 - [ ] 所有者审核后决定是否公开；另行准备申请材料。
 
 ## Current status
 
-更新时间：2026-10-21（北京时间）。这是一次人工核查快照，不是后台实时监控。
+更新时间：2026-10-21 23:54（北京时间）。这是一次人工核查快照，不是后台实时监控。
 
-当前优先级：用现有 GitHub 仓库保存进度；问题先记录，后续逐项修正。本次仅增加文档，不修改运行代码、不部署、不发布软件包、不更改仓库可见性。
+### 工作区来源与身份核对（本轮）
 
-已核查代码基线：a59a03005fb3b50b56ef96bcf7c41455ca41160c。
+- 执行端在本线程开始时没有既有项目副本。按主控指定，在 `$HOME/Documents/Codex/agent-article-reader` 建立工作区，但该目录受 macOS 文件夹权限限制不可读写（`Operation not permitted`）。
+- 经授权，使用现有 GitHub 登录（gerardli）将 `gerardli/agent-article-reader`（私有，默认分支 main）克隆到 `$HOME/1Developer home/chatgpt/github-agent-article-reader`。
+- 本次 clone 是新建工作区，不是找到了原先的本机项目，也不代表同步了任何其他目录中的本地成果。未扫描主目录，未读取其他项目或浏览器资料。
+- 身份核对：remote = gerardli/agent-article-reader；`package.json` 为 TypeScript/ESM MCP 项目；入口 `src/index.ts` → `dist/index.js`。与 ai-reading-highlighter 浏览器扩展无关。
+- 基线提交：af264440cce31e3d8d7d729dd62060e81f874d4e（与云端最新一致），克隆后工作区干净，无未推送提交。
 
-- 已有实际 MCP 实现，入口 src/index.ts → dist/index.js，包含 HTTP 与可选浏览器读取路径。
-- 历史 CI [run 31466802659](https://github.com/gerardli/agent-article-reader/actions/runs/31466802659) 的 Node 20/22/24 检查成功。此为历史证据，本次没有重跑测试。
-- 浏览器测试使用 mock CDP fixtures；真实网站验收尚未完成。
-- 当前未确认本机目录和未提交改动。本次同步不代表 Mac 文件已上传或与 GitHub 完全一致。
-- 无持续运行的子 Agent；后续每轮执行后更新本文件，不承诺会话结束后自动刷新。
+### 本轮已完成
 
-## 已知问题（未修复）
+1. **可访问性与完整性语义分离**（P1/P2/P4）
+   - `src/core/access.ts`：`accessible` 只表示未检测到限制；`isComplete` 仅在存在明确证据时为 true。HTTP 路径不再用“响应成功 + 正文长度”推断完整，统一返回 `isComplete: false` 并给出原因 indicator。
+   - 短文本（<100 字符）不再判为 `truncated`，改为 `accessible` + `isComplete:false` + “insufficient text to assess completeness”。完整短文章、提取不足与真正截断不再混同。
+   - `src/browser/access-state.ts` 的 `completeness: unknown` 不再经 HTTP 分类器升级成已确认完整；浏览器 positive 场景同样返回 `isComplete:false`。
+2. **正文返回契约同步**
+   - `src/core/reader.ts`、`src/app/browser-reader.ts`：内容返回条件由 `accessible && isComplete` 改为 `accessState === "accessible"`，避免“isComplete 全部为 false”导致正常文章全部无法读取；限制、登录、付费墙、截断状态仍不返回正文。
+   - `.agents/skills/article-reader/SKILL.md`、`README.md`、`src/mcp/server.ts` 的措辞同步为“isComplete 表示完整性是否被证实，与是否返回正文分离；未证实时须如实标注”。
+3. **限制信号误拦收敛**（P3）
+   - `src/core/restricted-signals.ts`：删除裸 `\bcaptcha\b`、裸 `subscription required`、裸 `become a subscriber`、`remaining article` 等易误伤模式，改为需要动作/阻断语境的短语（如 `complete the captcha`、`subscribe to continue`）。普通订阅按钮、讨论 CAPTCHA 主题的文章不再命中。
+4. **回归测试**
+   - 更新 `tests/core/access.test.ts`、`tests/core/reader.test.ts`；新增 `tests/core/restricted-signals.test.ts`，覆盖：长文不虚报完整、短文不误判截断、讨论 CAPTCHA 不误拦、普通订阅入口不误拦、真实登录/订阅/截断仍拦截、浏览器 unknown 不升级。
 
-### P1：完整性被启发式规则过度断言
+### 本轮未完成 / 阻塞
 
-src/core/access.ts 在成功响应、正文至少 200 字符且未命中限制信号时返回 accessible / isComplete:true。正文长度和未匹配到限制词不能证明全文完整；无明确提示的长预览仍可能被标为完整。
+- **独立上下文审查未执行**：本轮按主控要求“不新建子 Agent，由执行端直接完成”，因此没有额外独立 review 上下文。提交前仅由执行端自审 diff。
+- **浏览器路径只有离线 mock 验证**：未接入日常浏览器、未导出会话，真实 CDP 抓取未运行。
+- **许可证（P5）未处理**：仍无 LICENSE/COPYING、package.json 无 license 字段，需所有者决定，本轮不擅自决定。
+- 执行端无法访问 `$HOME/Documents/Codex/`（macOS 文件夹权限），工作区改在 `$HOME/1Developer home/chatgpt/github-agent-article-reader`；如需迁回指定目录，需要先在系统设置中给终端授予该文件夹访问权限。
 
-现有 tests/core/access.test.ts 用 500 个字符的输入断言完整，验证的是当前启发式行为，不是现实文章的完整性。
+### 测试结果（区分通过 / 失败 / 未运行）
 
-### P2：浏览器的未知完整性可能被升级为完整
+- **通过**：`npm run check`（typecheck + vitest + build），11 个测试文件、85 个测试全部通过，tsc 构建成功。运行时间 2026-10-21 23:53 CST。
+- **未运行**：CI（本轮未触发 GitHub Actions，历史 CI 通过不代表本轮）。
+- **未运行**：浏览器/CDP 真实抓取。
+- **真实网页 HTTP 验收（2026-10-21 23:54 CST）**：本机 DNS 被本地代理返回 198.18/15 fake-ip，项目 SSRF 防护按设计拒绝（`UNSAFE_TARGET`），未绕过。改用 Cloudflare DoH 解析公网地址后完成 4 个公开页面探测：
+  - `https://example.com/` → `accessible`，`isComplete:false`，正文 156 字符正常返回（短文章不再被判截断）。
+  - `https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview` → `accessible`，`isComplete:false`，正文 12,730 字符返回，标题正确。
+  - `https://en.wikipedia.org/wiki/Article_(publishing)` → `unsupported`（站点对该客户端返回 text/plain，未绕过）。
+  - `https://www.cloudflare.com/learning/bots/what-is-a-captcha/` → `error` / HTTP 403；`https://www.theguardian.com/international` → `error` / HTTP 406。均为站点反爬拒绝，按设计不取正文。
 
-src/browser/access-state.ts 无限制信号时返回 completeness:unknown；src/app/browser-reader.ts 可再次调用同一完整性分类器，无新增正面证据却得到 isComplete:true。
+### 本轮提交与推送
 
-### P3：限制信号可能误拦正常文章
+- 代码与文档提交：见本次推送的 `fix: separate accessibility from proven completeness` 提交（哈希以推送后的 `git log` 为准，本文档随该提交一并推送）。
+- 推送目标：`origin/main`（gerardli/agent-article-reader，私有仓库）。未公开、未部署、未发布软件包、未开启 CI、未提交申请。
 
-HTTP 分支将原始 HTML 与正文一起匹配；规则包含 CAPTCHA、验证码和订阅相关短语。正常技术文章讨论这些概念、引用限制提示或带普通订阅入口时可能被误判。
+### 剩余已知问题
 
-这是静态代码审查发现的风险，尚未运行复现，不应写为已验证的真实网站故障。
-
-### P4：短文章与截断内容混同
-
-少于 200 字符的提取一律被标为 truncated，不能区分完整短文章、提取不足和真正截断。应澄清可访问性、完整性和提取质量的语义。
-
-### P5：开源许可与全量隐私审查尚未完成
-
-基线文件树未见 LICENSE/COPYING，package.json 无 license 字段；private:true 只是防止 npm 发布，不是 GitHub 可见性设置。
-
-锁文件 227 条非根包的许可声明均有值：MIT 169、MIT-0 1、Apache-2.0 27、BSD-2-Clause 3、BSD-3-Clause 4、ISC 11、MPL-2.0 12。该统计只是锁文件声明，尚未验证安装产物的许可文件、第三方源码归属或依赖漏洞；不能据此认定所有文件可统一采用某种许可证。
+1. **P5 许可证与第三方归属**：未确定自有代码许可证；锁文件 227 条非根包许可声明（MIT 169、MIT-0 1、Apache-2.0 27、BSD-2-Clause 3、BSD-3-Clause 4、ISC 11、MPL-2.0 12）仅是声明统计，不能据此统一授权。
+2. **浏览器真实验收缺失**：browser 源只经过 mock fixtures；completeness 语义在真实浏览器会话中的表现未验证。
+3. **完整性正面证据缺失**：当前没有任何路径会返回 `isComplete: true`。这是有意保守，但若后续需要“已证实完整”的正面路径（例如站点声明、结构化全文标记或用户确认），需另行设计并补测试，不能靠正文长度推断。
+4. **站点反爬与 UA 行为**：部分站点对非浏览器 UA 返回 403/406 或 text/plain；项目按设计拒绝，不绕过，也未增加伪造 UA。
+5. **依赖审计**：`npm install` 报告 10 个漏洞（5 moderate、4 high、1 critical）。本轮按“不升级无关依赖”未处理，需单独评估。
 
 ## 后续最小修正与验收
 
-先明确可访问性和完整性的独立语义，再同步 HTTP、browser、MCP、Skill 与文档。不要只将 isComplete 全部改为 false，导致现有“仅完整才返回正文”的契约把正常读取全部禁用。
-
-必要回归场景：
-
-1. 无限制提示的长预览，不得直接保证完整。
-2. 完整文章讨论 CAPTCHA，不应仅因主题词而误拦。
-3. 普通订阅入口与实际阅读限制的区别。
-4. 完整短文章与提取不足的区别。
-5. 实际登录、订阅或截断限制。
-6. 浏览器 completeness:unknown 不得无证据升级为已确认完整。
-
-先用合成样例复现与修正，再验证少量获授权的真实公开网页。记录真实结果与未验证范围，不复制个人浏览器资料或受保护文章正文。
+1. 如需要浏览器真实验收：在明确授权下用少量公开页面运行 CDP fixture 之外的抓取，不读取个人会话。
+2. 许可证：所有者决定后补 LICENSE 与 package.json license 字段，再核对第三方归属。
+3. 若需要 `isComplete: true` 的正面路径，先定义可验证证据，再改代码与测试。
+4. 依赖漏洞单独评估，不与本轮修正混合。
 
 ## 执行边界
 

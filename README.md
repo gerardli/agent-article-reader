@@ -7,7 +7,7 @@ The reader reports access state and provenance before returning article text. It
 ## Included
 
 - `inspect_article`: metadata and conservative access classification without article text.
-- `read_article`: normalized article content only when complete access is established.
+- `read_article`: normalized article content when access is classified as accessible; `isComplete` reports whether completeness was proven, separately from whether text is returned.
 - Safe HTTP retrieval with SSRF protection, DNS-pinned connections, redirect/timeout/size limits, and HTML-only responses.
 - Optional Playwright source for visible DOM from an exact already-open page in a local user-controlled CDP session.
 - Repository Skill in `.agents/skills/article-reader` and minimal plugin manifest.

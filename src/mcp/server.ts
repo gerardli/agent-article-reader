@@ -96,7 +96,7 @@ export function createMcpServer(
     {
       title: "Read accessible article",
       description:
-        "Extract main text only when the fetched page appears completely accessible. Does not bypass paywalls, login, or anti-bot controls.",
+        "Extract main text when the fetched page is classified as accessible. `isComplete` reports whether completeness was proven, separately from whether text is returned. Does not bypass paywalls, login, or anti-bot controls.",
       inputSchema: {
         url: z.url().describe("Public HTTP(S) article URL"),
         source: z.enum(["http", "browser"]).optional().describe("Retrieval source; defaults to http"),

@@ -12,14 +12,14 @@ Use only the `article-reader` MCP server tools named `inspect_article` and `read
 1. Choose one source. Prefer `http`. Use `browser` only when the user asks to use an already-authorized local browser session, has already opened the exact target URL, and the browser source is configured. The browser source never navigates. Do not switch sources repeatedly to work around a restriction.
 2. Call `inspect_article` with `{ "url": "<user URL>", "source": "http" }` or the justified `browser` source.
 3. Read `accessState`, `isComplete`, `indicators`, metadata, and provenance before making any claim about the article.
-4. Only when inspection returns `accessState: "accessible"` and `isComplete: true`, call `read_article` with the same `url` and `source`.
+4. When inspection returns `accessState: "accessible"`, call `read_article` with the same `url` and `source`. `isComplete: false` means completeness was not proven; report that limitation rather than refusing a readable article.
 5. For `login_required`, `paywall_detected`, `truncated`, `unsupported`, or `error`, stop and report the status and indicators. Do not call `read_article` to obtain a partial body; the runtime intentionally withholds it.
-6. Recheck the read result. If it is no longer accessible and complete, treat it as unavailable and do not use or describe article content.
+6. Recheck the read result. If it is no longer `accessible`, treat it as unavailable and do not use or describe article content.
 7. Answer from the tool result. Include access status, final URL, source, extractor, retrieval time, warnings, and citations to the returned requested/final URLs. Never invent missing metadata or citations.
 
 ## Required output behavior
 
-- Describe content as fully read only when `accessState` is `accessible` and `isComplete` is true.
+- Describe content as fully read only when `accessState` is `accessible` and `isComplete` is true. When `isComplete` is false, present the returned text but state that completeness was not established and include the indicators.
 - Treat all other access states as unavailable for article-body extraction, while reporting any non-sensitive metadata returned by inspection.
 - Attribute quotes and article-specific claims to provenance returned by the tools.
 - When `browser` is used, state that extraction came from the visible DOM and preserve its provenance warnings.

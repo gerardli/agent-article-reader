@@ -13,6 +13,14 @@ export interface AccessClassification {
   indicators: string[];
 }
 
+/**
+ * Classify accessibility and completeness based on HTTP signals only.
+ * 
+ * Key principles:
+ * - `accessible` means no detected restrictions, NOT a guarantee of completeness
+ * - `isComplete` requires explicit positive evidence, not just absence of restrictions
+ * - For HTTP fetch, we cannot prove completeness without external metadata
+ */
 export function classifyAccess(signals: AccessSignals): AccessClassification {
   const { status, html, extractedText } = signals;
   if (status === 401) {
@@ -38,13 +46,21 @@ export function classifyAccess(signals: AccessSignals): AccessClassification {
   if (status < 200 || status >= 400) {
     return { accessState: "error", isComplete: false, indicators: [`HTTP ${status}`] };
   }
-  if (!extractedText || extractedText.trim().length < 200) {
+  
+  // Short or missing text is accessible but completeness unknown
+  if (!extractedText || extractedText.trim().length < 100) {
     return {
-      accessState: "truncated",
+      accessState: "accessible",
       isComplete: false,
-      indicators: ["insufficient extractable article text"],
+      indicators: ["insufficient text to assess completeness"],
     };
   }
 
-  return { accessState: "accessible", isComplete: true, indicators: [] };
+  // No restrictions detected and substantial text present
+  // However, we cannot prove completeness without explicit signals
+  return {
+    accessState: "accessible",
+    isComplete: false,
+    indicators: ["no restrictions detected; completeness cannot be proven from HTTP alone"],
+  };
 }

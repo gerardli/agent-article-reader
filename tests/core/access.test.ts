@@ -23,23 +23,74 @@ describe("access classification", () => {
     expect(
       classifyAccess({
         status: 200,
-        html: "Continue reading this article",
+        html: "Continue reading this full article",
         extractedText: "preview",
       }),
     ).toMatchObject({ accessState: "truncated", isComplete: false });
   });
 
-  it("does not claim complete access for tiny extracts", () => {
-    expect(classifyAccess({ status: 200, html: "<article>x</article>", extractedText: "x" })).toEqual({
-      accessState: "truncated",
-      isComplete: false,
-      indicators: ["insufficient extractable article text"],
+  it("does not claim complete for very short extracts", () => {
+    const result = classifyAccess({ 
+      status: 200, 
+      html: "<article>x</article>", 
+      extractedText: "x" 
     });
+    expect(result.accessState).toBe("accessible");
+    expect(result.isComplete).toBe(false);
+    expect(result.indicators).toContain("insufficient text to assess completeness");
   });
 
-  it("claims accessible only for substantive extraction without block signals", () => {
-    expect(
-      classifyAccess({ status: 200, html: "<article>open</article>", extractedText: "x".repeat(500) }),
-    ).toEqual({ accessState: "accessible", isComplete: true, indicators: [] });
+  it("returns accessible but incomplete for substantial text without proof of completeness", () => {
+    const result = classifyAccess({ 
+      status: 200, 
+      html: "<article>open</article>", 
+      extractedText: "x".repeat(500) 
+    });
+    expect(result.accessState).toBe("accessible");
+    expect(result.isComplete).toBe(false);
+    expect(result.indicators[0]).toMatch(/completeness cannot be proven/);
+  });
+
+  describe("regression: false positive prevention", () => {
+    it("does not block articles discussing CAPTCHA as a topic", () => {
+      const result = classifyAccess({
+        status: 200,
+        html: "<p>This article discusses how captcha systems work and their security implications.</p>",
+        extractedText: "This article discusses how captcha systems work and their security implications. ".repeat(5),
+      });
+      expect(result.accessState).toBe("accessible");
+    });
+
+    it("does not block articles with subscribe buttons in sidebar", () => {
+      const result = classifyAccess({
+        status: 200,
+        html: `
+          <article>Main content here</article>
+          <aside>Subscribe to our newsletter</aside>
+        `,
+        extractedText: "Main content here. ".repeat(20),
+      });
+      expect(result.accessState).toBe("accessible");
+    });
+
+    it("blocks when subscription is required to continue reading", () => {
+      const result = classifyAccess({
+        status: 200,
+        html: "Subscribe to continue reading",
+        extractedText: "Preview text",
+      });
+      expect(result.accessState).toBe("paywall_detected");
+    });
+
+    it("distinguishes complete short articles from truncated content", () => {
+      const shortComplete = classifyAccess({
+        status: 200,
+        html: "<article>A brief but complete news update.</article>",
+        extractedText: "A brief but complete news update.",
+      });
+      expect(shortComplete.accessState).toBe("accessible");
+      expect(shortComplete.isComplete).toBe(false);
+      expect(shortComplete.indicators[0]).not.toMatch(/truncated/);
+    });
   });
 });
