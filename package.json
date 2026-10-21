@@ -2,6 +2,7 @@
   "name": "agent-article-reader",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Local MCP server and Codex skill for extracting articles the user is authorized to access.",
   "type": "module",
   "bin": {

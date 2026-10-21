@@ -6,8 +6,8 @@
 - [x] 隐私与归属检查：工作区全部跟踪文件 + 全部 Git 历史，只记录位置与类别。
 - [x] 依赖风险快速分类：advisory、依赖路径、生产/开发范围与触发条件。
 - [x] README 补齐安装、最小示例与已知限制。
-- [ ] 许可证选择（待所有者确认后应用）。
-- [ ] 所有者明确同意后再改仓库可见性。
+- [x] 许可证选择：确认 MIT，已添加 LICENSE 与 `package.json` 字段。
+- [x] 所有者明确同意后改仓库可见性（2026-10-22 授权执行）。
 
 ## Current status
 
@@ -54,8 +54,8 @@
 ### 3. 许可证与 README
 
 - 自有代码可授权：代码均在本仓库历史中原创提交，无 vendored 或第三方版权声明。
-- 建议许可证：**MIT**。理由：仓库是小型本地 MCP 工具，MIT 最短、最通用，允许复用与二次分发，降低使用者合规成本；不含专利授权条款。若更看重显式专利授权与贡献者条款，可改用 Apache-2.0（更长、需保留 NOTICE 机制）。
-- 待所有者确认后再添加 LICENSE 与 `package.json` 的 `license` 字段，不替第三方依赖重新授权。
+- 许可证选择：**MIT**。理由：仓库是小型本地 MCP 工具，MIT 最短、最通用，允许复用与二次分发，降低使用者合规成本；不含专利授权条款。Apache-2.0 因显式专利授权与 NOTICE 机制未被采用。
+- 所有者已确认采用 MIT（2026-10-22）。已添加根目录 `LICENSE`（标准 MIT 文本，版权持有人 Gerard Lee，年份 2026）与 `package.json` 的 `"license": "MIT"`。第三方依赖保持各自原有许可，不做重新授权；`private: true` 仅阻止 npm 发布，不影响源码许可。
 - README 已补：安装步骤（Node ≥20、`npm ci`、`npm run build`）、MCP 客户端最小配置示例、最小调用示例、已知限制（无 `isComplete: true` 路径、浏览器源仅 mock 验证、限制页不返回正文、403/406 与非 HTML 按 unsupported 处理、继承的依赖告警）。原有边界说明保留。
 
 ### 测试结果（区分通过 / 失败 / 未运行）
@@ -66,7 +66,8 @@
 
 ### 本轮提交与推送
 
-- 本轮提交：`docs: prepare public release review`（哈希以推送后的 `git log` 为准），仅含 README 与本文件。
+- 本轮前序提交：`3bbecc7`（`docs: prepare public release review`），含 README 与本文件。
+- 许可证提交：`chore: add MIT license`（哈希以推送后的 `git log` 为准），含 `LICENSE`、`package.json` 许可字段与本文件更新。
 - 推送目标：origin/main（私有仓库）。未公开、未部署、未发布软件包、未提交申请。
 
 ### 尚未解决但可公开记录的问题
