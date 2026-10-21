@@ -2,37 +2,47 @@
 
 ## Action list
 
-- [x] 确认 remote、分支与工作区状态，快进同步远程基线 afce970。
-- [x] 隐私与归属检查：工作区全部跟踪文件 + 全部 Git 历史，只记录位置与类别。
-- [x] 依赖风险快速分类：advisory、依赖路径、生产/开发范围与触发条件。
+- [x] 隐私与归属检查（跟踪文件 + 全部历史，仅记录位置与类别）。
+- [x] 依赖风险快速分类（advisory、依赖路径、生产/开发范围与触发条件）。
 - [x] README 补齐安装、最小示例与已知限制。
-- [x] 许可证选择：确认 MIT，已添加 LICENSE 与 `package.json` 字段。
-- [x] 所有者明确同意后改仓库可见性（2026-10-22 授权执行）。
+- [x] 采用 MIT 许可证并添加 `LICENSE`、`package.json` 许可字段。
+- [x] 仓库改为公开并验证匿名访问。
+- [x] 文档修正：以远程最新提交为准更新状态，移除本机目录路径，标注历史结论。
 
 ## Current status
 
-更新时间：2026-10-22（北京时间）。人工核查快照，不是实时监控。
+更新时间：2026-10-22 00:27（北京时间）。人工核查快照，不是实时监控。
 
-### 基线
+### 当前基线（已核实）
 
-- 工作区：`$HOME/1Developer home/chatgpt/github-agent-article-reader`，remote = gerardli/agent-article-reader，分支 main。
-- 开始时工作区干净；`git fetch` 后 `main` 落后 origin/main 1 个提交（afce970），仅改本文件，已 `--ff-only` 快进，无冲突、无未提交修改需要保护。
-- 历史链：0499a6e → 83a451f → a59a030 → af26444 → 4dc75e6 → afce970。
+- 仓库 gerardli/agent-article-reader，分支 `main`，远程 HEAD `947931e550bee33cee60a6636e694150eb82123f`。
+- 公开状态：已公开。GitHub REST 返回 `visibility=public`、`private=false`；未登录访问仓库页面、提交页面与 raw 文件均为 HTTP 200。
+- 许可证：MIT。根目录 `LICENSE` 为标准 MIT 文本（Copyright (c) 2026 Gerard Lee）；GitHub 许可证接口返回 `MIT | LICENSE`；`package.json` 含 `"license": "MIT"`。
+- CI：提交 947931e 的 push 触发 run 39633025590，completed/success。
+- 本机工作区与 `origin/main` 同步；提交本文件前无未提交改动。
+- 提交链：0499a6e → 83a451f → a59a030 → af26444 → 4dc75e6 → afce970 → 3bbecc7 → 947931e。
 
-### 1. 隐私与归属检查（实际范围与结论）
+### 当前有效的已知限制
 
-范围：全部 48 个跟踪文件、工作区、全部 6 个提交（逐提交树搜索），不扫描主目录、不读取凭证文件。
+1. 无 `isComplete: true` 的实现路径；完整性判断保守，正文返回与完整性判定已分离。
+2. 浏览器源只有 mock 覆盖，真实 CDP 抓取未验收。
+3. 依赖告警 10 项（生产树 6 项）：结论来自静态可达性分析，不是漏洞利用验证；当前配置未发现可达路径，版本变动后需重新核对。
+4. 中文“验证码”裸词与原始 HTML 全局匹配仍可能误拦主题文章（已知、非安全阻塞）。
+5. 站点反爬/UA 差异（403/406、text/plain）按设计拒绝，不绕过。
 
-检查项与结果：
+### 前序检查记录：隐私与归属（2026-10-22）
+
+范围：当时全部 48 个跟踪文件、工作区与全部 6 个提交（逐提交树搜索）；不扫描主目录、不读取凭证文件。
+
 - 凭证形状（`sk-`、`ghp_/gho_/ghu_/ghs_/ghr_`、AKIA、私钥头、`xox*`、`AIza*`、JWT 前缀）：工作区与全部历史均无命中。
-- 本机账户名与 `/Users/<name>` 绝对路径：工作区与全部历史均无命中。
+- 本机账户名与绝对主目录路径：工作区与全部历史均无命中。
 - 邮箱形状：仅 `tests/core/url-safety.test.ts:38` 的合成 fixture（`user:pass@example.com` 形式，用于断言 URL 内嵌凭证被拒绝）；example.com 为保留域名，非个人信息。
-- 提交者/作者邮箱：全部为 GitHub noreply 地址，可随仓库公开。
+- 提交者/作者邮箱：全部为 GitHub noreply 地址。
 - 锁文件下载地址：仅 registry.npmjs.org、opencollective.com、github.com、tidelift.com 等公开主机；无内嵌 userinfo、无私有 registry。
 - 第三方内容：`src/`、`tests/`、`docs/` 无 vendored 代码、无第三方版权头、无“licensed under”声明；全部代码来自本仓库历史提交。
-- 结论：**未发现凭证、私人数据或无权公开的第三方内容的阻断项**。唯一未决项是仓库自身许可证。
+- 结论：未发现凭证、私人数据或无权公开第三方内容的阻断项。当时唯一未决的许可证问题已于 2026-10-22 确定为 MIT。
 
-### 2. 依赖风险快速分类
+### 前序检查记录：依赖风险（2026-10-22）
 
 `npm audit`：10 项（1 critical、4 high、5 moderate）。生产树（`--omit=dev`）6 项，全部通过直接依赖 `@modelcontextprotocol/sdk@1.30.0` 传递引入：
 
@@ -49,37 +59,36 @@
 
 证据：`dist/` 无 express/hono/proxy-addr/ip-address/fast-uri 引用；`src/` 仅导入 SDK 的 `server/stdio.js` 与 `server/mcp.js`。
 
-结论：**未发现本项目实际运行路径可达的漏洞**；上述 advisory 属于继承的依赖告警，公开前记录、持续跟踪即可，不构成本轮公开阻塞。未执行任何升级，也未运行 `npm audit fix --force`。静态分类，未做真实漏洞利用验证；SDK/传递依赖版本若变动需重新核对。
+结论：未发现本项目实际运行路径可达的漏洞。该结论来自导入图与 advisory 文本的静态分类，不是漏洞利用验证；未升级依赖，未运行 `npm audit fix --force`。SDK 或传递依赖版本变动后需重新核对。
 
-### 3. 许可证与 README
+### 许可证与 README
 
-- 自有代码可授权：代码均在本仓库历史中原创提交，无 vendored 或第三方版权声明。
-- 许可证选择：**MIT**。理由：仓库是小型本地 MCP 工具，MIT 最短、最通用，允许复用与二次分发，降低使用者合规成本；不含专利授权条款。Apache-2.0 因显式专利授权与 NOTICE 机制未被采用。
-- 所有者已确认采用 MIT（2026-10-22）。已添加根目录 `LICENSE`（标准 MIT 文本，版权持有人 Gerard Lee，年份 2026）与 `package.json` 的 `"license": "MIT"`。第三方依赖保持各自原有许可，不做重新授权；`private: true` 仅阻止 npm 发布，不影响源码许可。
-- README 已补：安装步骤（Node ≥20、`npm ci`、`npm run build`）、MCP 客户端最小配置示例、最小调用示例、已知限制（无 `isComplete: true` 路径、浏览器源仅 mock 验证、限制页不返回正文、403/406 与非 HTML 按 unsupported 处理、继承的依赖告警）。原有边界说明保留。
+- 自有代码：均在本仓库历史中原创提交，无 vendored 或第三方版权声明。
+- 许可证：MIT（所有者于 2026-10-22 确认）。理由：小型本地 MCP 工具，MIT 最短、最通用，便于复用与二次分发，合规成本低；不含专利授权条款。Apache-2.0 因显式专利授权与 NOTICE 机制未被采用。
+- 第三方依赖保持各自原有许可，不做重新授权。`private: true` 仅阻止 npm 发布，不影响源码许可。
+- README 已含：安装步骤（Node ≥20、`npm ci`、`npm run build`）、MCP 客户端最小配置、最小调用示例、已知限制（无 `isComplete: true` 路径、浏览器源仅 mock 验证、限制页不返回正文、403/406 与非 HTML 按 unsupported 处理、继承的依赖告警）。
 
 ### 测试结果（区分通过 / 失败 / 未运行）
 
-- 本轮只改 README 与本文件，未改代码或依赖，因此未重跑 `npm run check`（按“纯文档修改无需反复全量测试”）。
-- 最近一次代码验证仍为提交 4dc75e6：本地 `npm run check` 85/85 通过；CI run 39629972672 在该提交上 success。afce970 与本次均为文档变更。
-- 未运行：浏览器/CDP 真实抓取、真实漏洞利用验证、许可证工具链检查。
+- 提交 4dc75e6：本地 `npm run check` 通过（11 个测试文件、85 个测试，含 tsc 构建）；CI run 39629972672 success。
+- 提交 947931e：CI run 39633025590 success。该提交只改 `LICENSE`、`package.json` 元数据与本文件，未重跑本地全量测试。
+- 本轮文档修正：未改代码或依赖，未重跑测试。
+- 未运行：浏览器/CDP 真实抓取、真实漏洞利用验证。
 
-### 本轮提交与推送
+### 本轮改动
 
-- 本轮前序提交：`3bbecc7`（`docs: prepare public release review`），含 README 与本文件。
-- 许可证提交：`chore: add MIT license`（哈希以推送后的 `git log` 为准），含 `LICENSE`、`package.json` 许可字段与本文件更新。
-- 推送目标：origin/main（私有仓库）。未公开、未部署、未发布软件包、未提交申请。
+仅修改 `docs/project-progress.md`：按远程最新提交更新当前状态，移除本机目录路径，把私有仓库、许可证未定、尚未公开等过期结论标注为历史记录。未改代码、依赖、工作流、README、`LICENSE` 或仓库设置。
 
-### 尚未解决但可公开记录的问题
+### 提交记录
 
-1. 许可证未定（待确认 MIT 或 Apache-2.0，或保留默认“保留所有权利”）。
-2. 无 `isComplete: true` 正面路径；完整性判断仍保守。
-3. 浏览器源仅有 mock 覆盖，真实 CDP 验收未做。
-4. 中文“验证码”裸词与原始 HTML 全局匹配仍可能误拦主题文章（已知、非安全阻塞）。
-5. 继承依赖告警 10 项（生产树 6 项），当前配置下不可达，待依赖升级窗口统一处理。
-6. 站点反爬/UA 差异（403/406、text/plain）按设计拒绝，不绕过。
-
----
+- `0499a6e` Initial commit
+- `83a451f` feat: add compliant agent reader
+- `a59a030` fix: fail closed on restricted browser content
+- `af26444` docs: record project progress and known issues before further fixes
+- `4dc75e6` fix: separate accessibility from proven completeness
+- `afce970` docs: verify latest CI and record remaining review limitations
+- `3bbecc7` docs: prepare public release review
+- `947931e` chore: add MIT license（仓库随后改为公开）
 
 ## 历史记录
 
@@ -104,8 +113,8 @@
 
 #### 工作区来源与身份核对（本轮）
 
-- 执行端在本线程开始时没有既有项目副本。按主控指定，在 `$HOME/Documents/Codex/agent-article-reader` 建立工作区，但该目录受 macOS 文件夹权限限制不可读写（`Operation not permitted`）。
-- 经授权，使用现有 GitHub 登录（gerardli）将 `gerardli/agent-article-reader`（私有，默认分支 main）克隆到 `$HOME/1Developer home/chatgpt/github-agent-article-reader`。
+- 执行端在本线程开始时没有既有项目副本。按主控指定在 Documents 下的目标目录建立工作区，但该目录受 macOS 文件夹权限限制不可读写（`Operation not permitted`）。
+- 经授权，使用现有 GitHub 登录（gerardli）将该仓库（当时为私有，默认分支 main）克隆到本机另一个开发目录（路径不在此记录）。
 - 本次 clone 是新建工作区，不是找到了原先的本机项目，也不代表同步了任何其他目录中的本地成果。未扫描主目录，未读取其他项目或浏览器资料。
 - 身份核对：remote = gerardli/agent-article-reader；`package.json` 为 TypeScript/ESM MCP 项目；入口 `src/index.ts` → `dist/index.js`。与 ai-reading-highlighter 浏览器扩展无关。
 - 基线提交：af264440cce31e3d8d7d729dd62060e81f874d4e（与云端最新一致），克隆后工作区干净，无未推送提交。
@@ -128,8 +137,8 @@
 
 - **独立上下文审查未执行**：本轮按主控要求“不新建子 Agent，由执行端直接完成”，因此没有额外独立 review 上下文。提交前仅由执行端自审 diff。
 - **浏览器路径只有离线 mock 验证**：未接入日常浏览器、未导出会话，真实 CDP 抓取未运行。
-- **许可证（P5）未处理**：仍无 LICENSE/COPYING、package.json 无 license 字段，需所有者决定，本轮不擅自决定。
-- 执行端无法访问 `$HOME/Documents/Codex/`（macOS 文件夹权限），工作区改在 `$HOME/1Developer home/chatgpt/github-agent-article-reader`；如需迁回指定目录，需要先在系统设置中给终端授予该文件夹访问权限。
+- **许可证（P5）未处理**（当时状态；2026-10-22 已采用 MIT 并补 LICENSE 与 package.json 字段）。
+- 执行端无法访问 Documents 下的指定目录（macOS 文件夹权限），工作区改在本机另一个开发目录；该限制只影响目录选择，不影响仓库内容。
 
 #### 测试结果（区分通过 / 失败 / 未运行）
 
@@ -145,11 +154,11 @@
 #### 本轮提交与推送
 
 - 代码与文档提交：见本次推送的 `fix: separate accessibility from proven completeness` 提交（哈希以推送后的 `git log` 为准，本文档随该提交一并推送）。
-- 推送目标：`origin/main`（gerardli/agent-article-reader，私有仓库）。未公开、未部署、未发布软件包、未开启 CI、未提交申请。
+- 推送目标：`origin/main`（gerardli/agent-article-reader）。当时仓库仍为私有；2026-10-22 已改为公开。未部署、未发布软件包、未提交申请。
 
 #### 剩余已知问题
 
-1. **P5 许可证与第三方归属**：未确定自有代码许可证；锁文件 227 条非根包许可声明（MIT 169、MIT-0 1、Apache-2.0 27、BSD-2-Clause 3、BSD-3-Clause 4、ISC 11、MPL-2.0 12）仅是声明统计，不能据此统一授权。
+1. **P5 许可证与第三方归属**（当时未确定；2026-10-22 已采用 MIT）：锁文件 227 条非根包许可声明（MIT 169、MIT-0 1、Apache-2.0 27、BSD-2-Clause 3、BSD-3-Clause 4、ISC 11、MPL-2.0 12）仅是声明统计，不能据此统一授权第三方代码。
 2. **浏览器真实验收缺失**：browser 源只经过 mock fixtures；completeness 语义在真实浏览器会话中的表现未验证。
 3. **完整性正面证据缺失**：当前没有任何路径会返回 `isComplete: true`。这是有意保守，但若后续需要“已证实完整”的正面路径（例如站点声明、结构化全文标记或用户确认），需另行设计并补测试，不能靠正文长度推断。
 4. **站点反爬与 UA 行为**：部分站点对非浏览器 UA 返回 403/406 或 text/plain；项目按设计拒绝，不绕过，也未增加伪造 UA。
@@ -158,19 +167,19 @@
 #### 后续最小修正与验收
 
 1. 如需要浏览器真实验收：在明确授权下用少量公开页面运行 CDP fixture 之外的抓取，不读取个人会话。
-2. 许可证：所有者决定后补 LICENSE 与 package.json license 字段，再核对第三方归属。
+2. 许可证：已完成（2026-10-22 采用 MIT，补 LICENSE 与 package.json license 字段）。
 3. 若需要 `isComplete: true` 的正面路径，先定义可验证证据，再改代码与测试。
 4. 依赖漏洞单独评估，不与本轮修正混合。
 
 #### 执行边界
 
-优先沿用当前仓库和已有工具，不增加部署或编排系统。修复和检查不以申请材料好看为目标；公开、软件包发布、部署和申请提交仍需所有者另行决定。
+优先沿用当前仓库和已有工具，不增加部署或编排系统。修复和检查不以申请材料好看为目标；当时公开、软件包发布、部署和申请提交仍需所有者另行决定（2026-10-22 所有者已授权公开）。
 
 ### 云端主控复核（2026-10-22）
 
 已读取提交 4dc75e6 的 diff 与本文件；这是独立于本机执行会话的有限静态复核，不是完整安全审计，也未在云端重跑测试。代码确认将正文返回与完整性分开，且此次未修改 DNS/HTTP 传输实现；DoH 探测方式未包含在提交中，因此不能仅据此提交独立验证探测过程是否保持原有地址校验和 DNS 固定。
 
-本轮修正可作为私有开发阶段成果接收，公开准备尚未完成。
+本轮修正可作为私有开发阶段成果接收；截至该次复核，公开准备尚未完成（后续轮次已完成公开准备并公开仓库）。
 
 - [CI 39629972672](https://github.com/gerardli/agent-article-reader/actions/runs/39629972672) 已核验为该代码提交、push 事件、completed/success。
 - 限制词误拦只得到部分缓解：restricted-signals.ts 仍有裸“验证码”匹配和对原始 HTML/正文的全局匹配，中文验证码主题文章、引用阻断提示的文章仍有误判风险。不要将 P3 标为彻底解决。
