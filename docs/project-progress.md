@@ -11,16 +11,16 @@
 
 ## Current status
 
-更新时间：2026-10-22 00:27（北京时间）。人工核查快照，不是实时监控。
+更新时间：2026-10-22 00:33（北京时间）。人工核查快照，不是实时监控。
 
-### 当前基线（已核实）
+### 代码与许可证核验基线（已核实）
 
-- 仓库 gerardli/agent-article-reader，分支 `main`，远程 HEAD `947931e550bee33cee60a6636e694150eb82123f`。
+- 仓库 gerardli/agent-article-reader，分支 `main`，代码与许可证核验基线 `947931e550bee33cee60a6636e694150eb82123f`。该 SHA 用于标识公开发布时的代码与 MIT 许可证状态，不表示当前远程 HEAD。
 - 公开状态：已公开。GitHub REST 返回 `visibility=public`、`private=false`；未登录访问仓库页面、提交页面与 raw 文件均为 HTTP 200。
 - 许可证：MIT。根目录 `LICENSE` 为标准 MIT 文本（Copyright (c) 2026 Gerard Lee）；GitHub 许可证接口返回 `MIT | LICENSE`；`package.json` 含 `"license": "MIT"`。
 - CI：提交 947931e 的 push 触发 run 39633025590，completed/success。
 - 本机工作区与 `origin/main` 同步；提交本文件前无未提交改动。
-- 提交链：0499a6e → 83a451f → a59a030 → af26444 → 4dc75e6 → afce970 → 3bbecc7 → 947931e。
+- 提交链（截至公开发布代码基线）：0499a6e → 83a451f → a59a030 → af26444 → 4dc75e6 → afce970 → 3bbecc7 → 947931e。
 
 ### 当前有效的已知限制
 
@@ -80,6 +80,8 @@
 仅修改 `docs/project-progress.md`：按远程最新提交更新当前状态，移除本机目录路径，把私有仓库、许可证未定、尚未公开等过期结论标注为历史记录。未改代码、依赖、工作流、README、`LICENSE` 或仓库设置。
 
 ### 提交记录
+
+以下为截至公开发布代码基线 `947931e` 的提交记录；之后仅有文档提交，不改变代码与许可证基线，也不代表当前完整主分支历史。
 
 - `0499a6e` Initial commit
 - `83a451f` feat: add compliant agent reader
