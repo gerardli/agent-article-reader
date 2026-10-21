@@ -49,13 +49,13 @@
 ### 测试结果（区分通过 / 失败 / 未运行）
 
 - **通过**：`npm run check`（typecheck + vitest + build），11 个测试文件、85 个测试全部通过，tsc 构建成功。运行时间 2026-10-21 23:53 CST。
-- **未运行**：CI（本轮未触发 GitHub Actions，历史 CI 通过不代表本轮）。
+- **云端复核已通过**：提交 4dc75e6 的 push 自动触发 CI，run 39629972672 于北京时间 2026-10-21 23:55:13 完成，结论 success。执行端未手动触发不代表没有自动 CI。
 - **未运行**：浏览器/CDP 真实抓取。
-- **真实网页 HTTP 验收（2026-10-21 23:54 CST）**：本机 DNS 被本地代理返回 198.18/15 fake-ip，项目 SSRF 防护按设计拒绝（`UNSAFE_TARGET`），未绕过。改用 Cloudflare DoH 解析公网地址后完成 4 个公开页面探测：
+- **真实网页 HTTP 验收（2026-10-21 23:54 CST）**：本机 DNS 被本地代理返回 198.18/15 fake-ip，项目 SSRF 防护按设计拒绝（`UNSAFE_TARGET`），未绕过。改用 Cloudflare DoH 解析公网地址后完成以下 5 个公开页面探测：
   - `https://example.com/` → `accessible`，`isComplete:false`，正文 156 字符正常返回（短文章不再被判截断）。
   - `https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview` → `accessible`，`isComplete:false`，正文 12,730 字符返回，标题正确。
   - `https://en.wikipedia.org/wiki/Article_(publishing)` → `unsupported`（站点对该客户端返回 text/plain，未绕过）。
-  - `https://www.cloudflare.com/learning/bots/what-is-a-captcha/` → `error` / HTTP 403；`https://www.theguardian.com/international` → `error` / HTTP 406。均为站点反爬拒绝，按设计不取正文。
+  - `https://www.cloudflare.com/learning/bots/what-is-a-captcha/` → `error` / HTTP 403；`https://www.theguardian.com/international` → `error` / HTTP 406。均未取得正文；仅凭 403/406 不能确定是反爬，具体原因待站点返回内容证实。
 
 ### 本轮提交与推送
 
@@ -80,3 +80,15 @@
 ## 执行边界
 
 优先沿用当前仓库和已有工具，不增加部署或编排系统。修复和检查不以申请材料好看为目标；公开、软件包发布、部署和申请提交仍需所有者另行决定。
+
+## 云端主控复核（2026-10-22）
+
+已读取提交 4dc75e6 的 diff 与本文件；这是独立于本机执行会话的有限静态复核，不是完整安全审计，也未在云端重跑测试。代码确认将正文返回与完整性分开，且此次未修改 DNS/HTTP 传输实现；DoH 探测方式未包含在提交中，因此不能仅据此提交独立验证探测过程是否保持原有地址校验和 DNS 固定。
+
+本轮修正可作为私有开发阶段成果接收，公开准备尚未完成。
+
+- [CI 39629972672](https://github.com/gerardli/agent-article-reader/actions/runs/39629972672) 已核验为该代码提交、push 事件、completed/success。
+- 限制词误拦只得到部分缓解：restricted-signals.ts 仍有裸“验证码”匹配和对原始 HTML/正文的全局匹配，中文验证码主题文章、引用阻断提示的文章仍有误判风险。不要将 P3 标为彻底解决。
+- 空提取尚需确认：classifyAccess 的 !extractedText 分支也返回 accessible，可能出现 accessible + content:null，需与正常短文章区分。先记录，后续最小修正，不扩展工程。
+- 10 项依赖漏洞目前只有执行端汇总，没有 advisory、依赖路径及生产/开发范围；公开前先做明细分类，不能只按数量判断风险，也不要直接运行强制批量升级。
+- 下一步继续使用现有本机工作区，无需迁回 Documents 或额外授予目录访问权限。
